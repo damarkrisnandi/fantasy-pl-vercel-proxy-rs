@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "functions": {
+    "api/**/*.rs": {
+      "runtime": "vercel-rust@4.0.9"
+    }
+  },
+
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/handler.rs"
+    }
+  ],
+  "env": {
+    "RUST_LOG": "info"
+  }
+}
