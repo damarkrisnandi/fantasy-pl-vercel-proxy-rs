@@ -1,0 +1,245 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "name": "Gameweek 1",
+      "deadline_time": "2024-08-17T10:00:00Z",
+      "average_entry_score": 0,
+      "finished": false,
+      "data_checked": false,
+      "highest_scoring_entry": null,
+      "deadline_time_epoch": 1723896000,
+      "deadline_time_game_offset": 0,
+      "highest_score": null,
+      "is_previous": false,
+      "is_current": true,
+      "is_next": false,
+      "cup_leagues_created": false,
+      "h2h_ko_matches_created": false,
+      "chip_plays": [],
+      "most_selected": null,
+      "most_transferred_in": null,
+      "top_element": null,
+      "top_element_info": null,
+      "transfers_made": 0,
+      "most_captained": null,
+      "most_vice_captained": null
+    }
+  ],
+  "game_settings": {
+    "league_join_private_max": 20,
+    "league_join_public_max": 20,
+    "league_max_size_public_classic": 20,
+    "league_max_size_public_h2h": 16,
+    "league_max_size_private_h2h": 16,
+    "league_max_ko_rounds_private_h2h": 3,
+    "league_prefix_public": "League",
+    "league_points_h2h_win": 3,
+    "league_points_h2h_lose": 0,
+    "league_points_h2h_draw": 1,
+    "league_ko_first_instead_of_random": false,
+    "cup_start_event_id": null,
+    "cup_stop_event_id": null,
+    "cup_qualifying_method": null,
+    "cup_type": null,
+    "featured_entries": [],
+    "percentile_ranks": [],
+    "squad_squadplay": 11,
+    "squad_squadsize": 15,
+    "squad_team_limit": 3,
+    "squad_total_spend": 1000,
+    "ui_currency_multiplier": 10,
+    "ui_use_special_shirts": false,
+    "ui_special_shirt_exclusions": [],
+    "stats_form_days": 30,
+    "sys_vice_captain_enabled": true,
+    "transfers_cap": 1,
+    "transfers_sell_on_fee": 0,
+    "league_h2h_tiebreak_stats": [
+      "+goals_scored",
+      "-goals_conceded"
+    ],
+    "timezone": "UTC"
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Overall",
+      "start_event": 1,
+      "stop_event": 38
+    }
+  ],
+  "teams": [
+    {
+      "code": 3,
+      "draw": 0,
+      "form": null,
+      "id": 1,
+      "loss": 0,
+      "name": "Arsenal",
+      "played": 0,
+      "points": 0,
+      "position": 0,
+      "short_name": "ARS",
+      "strength": 4,
+      "team_division": null,
+      "unavailable": false,
+      "win": 0,
+      "strength_overall_home": 1340,
+      "strength_overall_away": 1340,
+      "strength_attack_home": 1340,
+      "strength_attack_away": 1340,
+      "strength_defence_home": 1340,
+      "strength_defence_away": 1340,
+      "pulse_id": 1
+    }
+  ],
+  "total_players": 0,
+  "elements": [],
+  "element_stats": [
+    {
+      "label": "Minutes played",
+      "name": "minutes"
+    },
+    {
+      "label": "Goals scored",
+      "name": "goals_scored"
+    },
+    {
+      "label": "Assists",
+      "name": "assists"
+    },
+    {
+      "label": "Clean sheets",
+      "name": "clean_sheets"
+    },
+    {
+      "label": "Goals conceded",
+      "name": "goals_conceded"
+    },
+    {
+      "label": "Own goals",
+      "name": "own_goals"
+    },
+    {
+      "label": "Penalties saved",
+      "name": "penalties_saved"
+    },
+    {
+      "label": "Penalties missed",
+      "name": "penalties_missed"
+    },
+    {
+      "label": "Yellow cards",
+      "name": "yellow_cards"
+    },
+    {
+      "label": "Red cards",
+      "name": "red_cards"
+    },
+    {
+      "label": "Saves",
+      "name": "saves"
+    },
+    {
+      "label": "Bonus",
+      "name": "bonus"
+    },
+    {
+      "label": "Bonus Points System",
+      "name": "bps"
+    },
+    {
+      "label": "Influence",
+      "name": "influence"
+    },
+    {
+      "label": "Creativity",
+      "name": "creativity"
+    },
+    {
+      "label": "Threat",
+      "name": "threat"
+    },
+    {
+      "label": "ICT Index",
+      "name": "ict_index"
+    },
+    {
+      "label": "Starts",
+      "name": "starts"
+    },
+    {
+      "label": "Expected Goals",
+      "name": "expected_goals"
+    },
+    {
+      "label": "Expected Assists",
+      "name": "expected_assists"
+    },
+    {
+      "label": "Expected Goal Involvements",
+      "name": "expected_goal_involvements"
+    },
+    {
+      "label": "Expected Goals Conceded",
+      "name": "expected_goals_conceded"
+    }
+  ],
+  "element_types": [
+    {
+      "id": 1,
+      "plural_name": "Goalkeepers",
+      "plural_name_short": "GKP",
+      "singular_name": "Goalkeeper",
+      "singular_name_short": "GKP",
+      "squad_select": 2,
+      "squad_min_play": 1,
+      "squad_max_play": 1,
+      "ui_shirt_specific": true,
+      "sub_positions_locked": [
+        12
+      ],
+      "element_count": 0
+    },
+    {
+      "id": 2,
+      "plural_name": "Defenders",
+      "plural_name_short": "DEF",
+      "singular_name": "Defender",
+      "singular_name_short": "DEF",
+      "squad_select": 5,
+      "squad_min_play": 3,
+      "squad_max_play": 5,
+      "ui_shirt_specific": false,
+      "sub_positions_locked": [],
+      "element_count": 0
+    },
+    {
+      "id": 3,
+      "plural_name": "Midfielders",
+      "plural_name_short": "MID",
+      "singular_name": "Midfielder",
+      "singular_name_short": "MID",
+      "squad_select": 5,
+      "squad_min_play": 2,
+      "squad_max_play": 5,
+      "ui_shirt_specific": false,
+      "sub_positions_locked": [],
+      "element_count": 0
+    },
+    {
+      "id": 4,
+      "plural_name": "Forwards",
+      "plural_name_short": "FWD",
+      "singular_name": "Forward",
+      "singular_name_short": "FWD",
+      "squad_select": 3,
+      "squad_min_play": 1,
+      "squad_max_play": 3,
+      "ui_shirt_specific": false,
+      "sub_positions_locked": [],
+      "element_count": 0
+    }
+  ]
+}

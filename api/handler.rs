@@ -2,7 +2,7 @@ use moka::future::Cache;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::{sync::OnceLock, time::Duration};
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use vercel_runtime::{run, Body, Error, Request, Response};
 
 // Configuration constants
@@ -36,39 +36,90 @@ fn get_cache() -> &'static Cache<String, Value> {
     })
 }
 
-async fn fetch_with_fallback(primary_url: &str, backup_url: Option<&str>) -> Result<Value, String> {
+// Load backup JSON data from embedded files
+fn load_backup_data(endpoint: &str) -> Option<Value> {
+    match endpoint {
+        "bootstrap-static" => {
+            let backup_json = include_str!("../backup-data/bootstrap-static.json");
+            serde_json::from_str(backup_json).ok()
+        },
+        "fixtures" => {
+            let backup_json = include_str!("../backup-data/fixtures.json");
+            serde_json::from_str(backup_json).ok()
+        },
+        "live-event" => {
+            let backup_json = include_str!("../backup-data/live-event.json");
+            serde_json::from_str(backup_json).ok()
+        },
+        _ => None
+    }
+}
+
+async fn fetch_with_fallback(primary_url: &str, backup_url: Option<&str>, local_backup: Option<&str>) -> Result<Value, String> {
     let client = get_http_client();
+    let mut is_503_error = false;
 
     // Try primary URL first
     match client.get(primary_url).send().await {
-        Ok(response) if response.status().is_success() => {
-            match response.json::<Value>().await {
-                Ok(data) => return Ok(data),
-                Err(e) => error!("Failed to parse JSON from primary URL {}: {}", primary_url, e),
+        Ok(response) => {
+            let status = response.status();
+            if status.is_success() {
+                match response.json::<Value>().await {
+                    Ok(data) => return Ok(data),
+                    Err(e) => error!("Failed to parse JSON from primary URL {}: {}", primary_url, e),
+                }
+            } else {
+                if status.as_u16() == 503 {
+                    is_503_error = true;
+                    warn!("Received 503 Service Unavailable from primary URL: {}", primary_url);
+                } else {
+                    error!("Received non-success status {} from primary URL {}", status, primary_url);
+                }
             }
         }
-        Ok(response) => error!("Received non-success status {} from primary URL {}", response.status(), primary_url),
-        Err(e) => error!("Failed to fetch from primary URL {}: {}", primary_url, e),
+        Err(e) => {
+            error!("Failed to fetch from primary URL {}: {}", primary_url, e);
+            // Network errors might indicate overload, treat as potential 503
+            is_503_error = true;
+        }
     }
 
     // Try backup URL if available
     if let Some(backup_url) = backup_url {
         match client.get(backup_url).send().await {
-            Ok(response) if response.status().is_success() => {
-                match response.json::<Value>().await {
-                    Ok(data) => return Ok(data),
-                    Err(e) => error!("Failed to parse JSON from backup URL {}: {}", backup_url, e),
+            Ok(response) => {
+                let status = response.status();
+                if status.is_success() {
+                    match response.json::<Value>().await {
+                        Ok(data) => return Ok(data),
+                        Err(e) => error!("Failed to parse JSON from backup URL {}: {}", backup_url, e),
+                    }
+                } else {
+                    if status.as_u16() == 503 {
+                        warn!("Received 503 Service Unavailable from backup URL: {}", backup_url);
+                    } else {
+                        error!("Received non-success status {} from backup URL {}", status, backup_url);
+                    }
                 }
             }
-            Ok(response) => error!("Received non-success status {} from backup URL {}", response.status(), backup_url),
             Err(e) => error!("Failed to fetch from backup URL {}: {}", backup_url, e),
         }
     }
 
-    Err("Failed to fetch data from both primary and backup URLs".to_string())
+    // If we encountered 503 errors or network issues, try local backup data
+    if is_503_error {
+        if let Some(backup_endpoint) = local_backup {
+            if let Some(backup_data) = load_backup_data(backup_endpoint) {
+                warn!("Using local backup data for endpoint: {}", backup_endpoint);
+                return Ok(backup_data);
+            }
+        }
+    }
+
+    Err("Failed to fetch data from all available sources".to_string())
 }
 
-async fn get_cached_or_fetch(cache_key: &str, primary_url: &str, backup_url: Option<&str>) -> Result<Value, String> {
+async fn get_cached_or_fetch(cache_key: &str, primary_url: &str, backup_url: Option<&str>, local_backup: Option<&str>) -> Result<Value, String> {
     let cache = get_cache();
 
     // Check cache first
@@ -76,8 +127,8 @@ async fn get_cached_or_fetch(cache_key: &str, primary_url: &str, backup_url: Opt
         return Ok(cached_data);
     }
 
-    // Fetch from API
-    let data = fetch_with_fallback(primary_url, backup_url).await?;
+    // Fetch from API with all fallback mechanisms
+    let data = fetch_with_fallback(primary_url, backup_url, local_backup).await?;
 
     // Cache the result
     cache.insert(cache_key.to_string(), data.clone()).await;
@@ -108,58 +159,58 @@ async fn handle_bootstrap_static() -> Result<Value, String> {
     let primary_url = format!("{}/bootstrap-static/", FPL_API_BASE);
     let backup_url = format!("{}/{}/bootstrap-static.json", BACKUP_API_BASE, BACKUP_SEASON);
 
-    get_cached_or_fetch("bootstrap-static", &primary_url, Some(&backup_url)).await
+    get_cached_or_fetch("bootstrap-static", &primary_url, Some(&backup_url), Some("bootstrap-static")).await
 }
 
 async fn handle_fixtures() -> Result<Value, String> {
     let primary_url = format!("{}/fixtures/", FPL_API_BASE);
     let backup_url = format!("{}/{}/fixtures.json", BACKUP_API_BASE, BACKUP_SEASON);
 
-    fetch_with_fallback(&primary_url, Some(&backup_url)).await
+    fetch_with_fallback(&primary_url, Some(&backup_url), Some("fixtures")).await
 }
 
 async fn handle_element_summary(id: &str) -> Result<Value, String> {
     let url = format!("{}/element-summary/{}/", FPL_API_BASE, id);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handle_live_event(gw: &str) -> Result<Value, String> {
     let url = format!("{}/event/{}/live/", FPL_API_BASE, gw);
     let cache_key = format!("live-event-{}", gw);
 
-    get_cached_or_fetch(&cache_key, &url, None).await
+    get_cached_or_fetch(&cache_key, &url, None, Some("live-event")).await
 }
 
 async fn handle_picks(manager_id: &str, gw: &str) -> Result<Value, String> {
     let url = format!("{}/entry/{}/event/{}/picks/", FPL_API_BASE, manager_id, gw);
     let cache_key = format!("picks-{}-{}", manager_id, gw);
 
-    get_cached_or_fetch(&cache_key, &url, None).await
+    get_cached_or_fetch(&cache_key, &url, None, None).await
 }
 
 async fn handle_manager_info(id: &str) -> Result<Value, String> {
     let url = format!("{}/entry/{}/", FPL_API_BASE, id);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handle_manager_transfers(id: &str) -> Result<Value, String> {
     let url = format!("{}/entry/{}/transfers/", FPL_API_BASE, id);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handle_manager_history(id: &str) -> Result<Value, String> {
     let url = format!("{}/entry/{}/history/", FPL_API_BASE, id);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handle_league_standings(league_id: &str, page: &str) -> Result<Value, String> {
     let url = format!("{}/leagues-classic/{}/standings/?page_standings={}", FPL_API_BASE, league_id, page);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handle_league_standings_by_phase(league_id: &str, phase: &str) -> Result<Value, String> {
     let url = format!("{}/leagues-classic/{}/standings/?page_standings=1&phase={}", FPL_API_BASE, league_id, phase);
-    fetch_with_fallback(&url, None).await
+    fetch_with_fallback(&url, None, None).await
 }
 
 async fn handler(request: Request) -> Result<Response<Body>, Error> {
