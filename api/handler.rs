@@ -8,7 +8,7 @@ use vercel_runtime::{run, Body, Error, Request, Response};
 // Configuration constants
 const FPL_API_BASE: &str = "https://fantasy.premierleague.com/api";
 const BACKUP_API_BASE: &str = "https://fpl-static-data.vercel.app";
-const BACKUP_SEASON: &str = "2024-2025";
+const BACKUP_SEASON: &str = "2025-2026";
 
 // Cache durations in seconds
 const BOOTSTRAP_CACHE_DURATION: u64 = 600; // 10 minutes
