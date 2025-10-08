@@ -21,5 +21,5 @@ codegen-units = 1
 
 # Each handler has to be specified as [[bin]]
 [[bin]]
-name = "handler"
+name = "main"
 path = "api/handler.rs"

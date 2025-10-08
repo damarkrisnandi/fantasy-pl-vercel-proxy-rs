@@ -5,7 +5,6 @@
       "runtime": "vercel-rust@4.0.9"
     }
   },
-
   "routes": [
     {
       "src": "/(.*)",
